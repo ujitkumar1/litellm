@@ -3097,8 +3097,8 @@ class ProxyBaseLLMRequestProcessing:
             Modified SSE frame string with cost injected, or None if no modification needed
         """
         try:
-            # Split preserving lines
-            lines: Final = frame_str.split("\n")
+            line_ending: Final = "\r\n" if "\r\n" in frame_str else "\n"
+            lines: Final = frame_str.split(line_ending)
             for idx, ln in enumerate(lines):
                 stripped_ln = ln.strip()
                 if stripped_ln.startswith("data:"):
@@ -3107,9 +3107,8 @@ class ProxyBaseLLMRequestProcessing:
                         obj = json.loads(json_part)
                         maybe_modified = ProxyBaseLLMRequestProcessing._inject_cost_into_usage_dict(obj, model_name)
                         if maybe_modified is not None:
-                            # Replace just this line with updated JSON using safe_dumps
                             lines[idx] = f"data: {safe_dumps(maybe_modified)}"
-                            return "\n".join(lines)
+                            return line_ending.join(lines)
             return None
         except Exception:
             return None
